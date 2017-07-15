@@ -11,7 +11,7 @@
 #define BB_FILE_A 0x0101010101010101ULL
 #define BB_FILE_H 0x8080808080808080ULL
 
-static const char PCHR[] = "\0PNBRQK";
+static const char *PCHR = "\0PNBRQK";
 
 static inline int square_file(uint8_t square) {
     return square & 7;
@@ -27,12 +27,12 @@ static int square_distance(uint8_t a, uint8_t b) {
     return (rd > fd) ? rd : fd;
 }
 
-static const int ROOK_DELTAS[] = { 8, 1, -8, -1, 0 };
-static const int BISHOP_DELTAS[] = { 9, -9, 7, -7, 0 };
-static const int KING_DELTAS[] = { 8, 1, -8, -1, 9, -9, 7, -7, 0 };
-static const int KNIGHT_DELTAS[] = { 17, 15, 10, 6, -6, -10, -15, -17, 0 };
+static const int *ROOK_DELTAS = { 8, 1, -8, -1, 0 };
+static const int *BISHOP_DELTAS = { 9, -9, 7, -7, 0 };
+static const int *KING_DELTAS = { 8, 1, -8, -1, 9, -9, 7, -7, 0 };
+static const int *KNIGHT_DELTAS = { 17, 15, 10, 6, -6, -10, -15, -17, 0 };
 
-static uint64_t attacks_sliding(const int deltas[], uint8_t square, uint64_t occupied) {
+static uint64_t attacks_sliding(const int *deltas, uint8_t square, uint64_t occupied) {
     uint64_t attack = 0;
 
     for (int i = 0; deltas[i]; i++) {
@@ -57,7 +57,7 @@ static inline uint8_t move_to(move_t move) {
 }
 
 static piece_type_t move_promotion(move_t move) {
-    static const piece_type_t promotions[] = { kNone, kPawn, kKnight, kBishop, kRook, kQueen, kKing, kNone };
+    static const piece_type_t *promotions = { kNone, kPawn, kKnight, kBishop, kRook, kQueen, kKing, kNone };
     return promotions[move >> 12];
 }
 
@@ -70,7 +70,7 @@ void move_uci(move_t move, char *uci) {
     int from = move_from(move);
     int to = move_to(move);
 
-    const char promotions[] = "\0pnbrqk";
+    const char *promotions = "\0pnbrqk";
 
     sprintf(uci, "%c%c%c%c%c", 'a' + square_file(from), '1' + square_rank(from),
                                'a' + square_file(to),   '1' + square_rank(to),
@@ -78,7 +78,7 @@ void move_uci(move_t move, char *uci) {
 }
 
 move_t move_parse(const char *uci) {
-    const char promotions[] = "\0pnbrqk";
+    const char *promotions = "\0pnbrqk";
 
     if (strlen(uci) > 5 || strlen(uci) < 4) return 0;
 

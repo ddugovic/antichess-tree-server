@@ -1,0 +1,6 @@
+[package]
+name = "antichess-tree-server"
+version = "0.1.0"
+authors = ["Niklas Fiekas", "Daniel Dugovic <dandydand@gmail.com>", "Corrode"]
+
+[dependencies]

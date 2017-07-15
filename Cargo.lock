@@ -1,0 +1,4 @@
+[root]
+name = "antichess-tree-server"
+version = "0.1.0"
+

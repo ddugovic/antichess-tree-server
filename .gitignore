@@ -5,3 +5,5 @@
 *.o
 antichess-tree-server
 test
+/target/
+**/*.rs.bk

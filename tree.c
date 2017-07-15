@@ -11,17 +11,17 @@
 
 #define SWAP(x, y) do { typeof(x) SWAP = x; x = y; y = SWAP; } while (0)
 
-static inline bool arr_get_bit(const uint64_t *arr, size_t n) {
+inline bool arr_get_bit(const uint64_t *arr, size_t n) {
     return !!(arr[n >> 6] & (1ULL << (n & 0x3f)));
 }
 
-static inline void arr_set_bit(uint64_t *arr, size_t n) {
+inline void arr_set_bit(uint64_t *arr, size_t n) {
     arr[n >> 6] |= (1ULL << (n & 0x3f));
 }
 
-static const uint32_t HASHTABLE_MASK = 0xfffff;
+const uint32_t HASHTABLE_MASK = 0xfffff;
 
-static uint32_t compute_hash(uint32_t n) {
+uint32_t compute_hash(uint32_t n) {
     uint32_t k = n * n;
     k += (n >> 10) ^ ((~n) & 0x3ff);
     k += ((n >> 5) ^ ((~n) & 0x7fff)) << 5;
@@ -31,22 +31,22 @@ static uint32_t compute_hash(uint32_t n) {
     return k & HASHTABLE_MASK;
 }
 
-static const node_t *tree_next(const tree_t *tree, const node_t *node) {
+const node_t *tree_next(const tree_t *tree, const node_t *node) {
     if (tree->root == node) return tree->nodes;
     else return node + 1;
 }
 
-static node_t *tree_from_index(const tree_t *tree, uint32_t index) {
+node_t *tree_from_index(const tree_t *tree, uint32_t index) {
     if (!index) return NULL;
     else return tree->nodes + index - 1;
 }
 
-static uint32_t tree_index(const tree_t *tree, const node_t *node) {
+uint32_t tree_index(const tree_t *tree, const node_t *node) {
     if (tree->root == node) return 0;
     else return node - tree->nodes + 1;
 }
 
-static move_t node_move(const node_t *node) {
+move_t node_move(const node_t *node) {
     // 76543210 76543210
     //            111111 from
     //     1111 11       to
@@ -67,37 +67,37 @@ static move_t node_move(const node_t *node) {
     return move;
 }
 
-static inline bool node_is_trans(const node_t *node) {
+inline bool node_is_trans(const node_t *node) {
     return (node->data & (1U << 31)) == (1U << 31);
 }
 
-static inline bool node_trans_and_sibling(const node_t *node) {
+inline bool node_trans_and_sibling(const node_t *node) {
     return (node->data & (3U << 30)) == (3U << 30);
 }
 
-static inline uint32_t node_trans_index(const node_t *node) {
+inline uint32_t node_trans_index(const node_t *node) {
     return node->data & 0x3fffffff;
 }
 
-static inline bool node_has_child(const node_t *node) {
+inline bool node_has_child(const node_t *node) {
     return ((node->data & (3U << 30)) == (1U << 30)) && ((node->data & 0x3fffffff) != 0x3fffffff);
 }
 
-static const node_t *tree_trans(const tree_t *tree, const node_t *node) {
+const node_t *tree_trans(const tree_t *tree, const node_t *node) {
     return tree_from_index(tree, node_trans_index(node));
 }
 
-static const node_t *tree_trans_ns(const tree_t *tree, const node_t *node) {
+const node_t *tree_trans_ns(const tree_t *tree, const node_t *node) {
     if ((node->data & 0x3fffffff) != 0x3fffffff) return tree_from_index(tree, node->data & 0x3fffffff);
     else return ((node->data & (1U << 30)) == (1U << 30)) ? tree_next(tree, node) : NULL;
 }
 
-static const node_t *tree_next_sibling(const tree_t *tree, const node_t *node) {
+const node_t *tree_next_sibling(const tree_t *tree, const node_t *node) {
     if (node_trans_and_sibling(node)) return tree_next(tree, node);
     else return node_is_trans(node) ? NULL : tree_trans_ns(tree, node);
 }
 
-static uint32_t tree_lookup_subtree_size(const tree_t *tree, const node_t *node) {
+uint32_t tree_lookup_subtree_size(const tree_t *tree, const node_t *node) {
     while (node_is_trans(node)) node = tree_trans(tree, node);
 
     uint32_t index = tree_index(tree, node);
@@ -110,7 +110,7 @@ static uint32_t tree_lookup_subtree_size(const tree_t *tree, const node_t *node)
     return 0;
 }
 
-static bool tree_save_subtree_size(tree_t *tree, const node_t *node, uint32_t size) {
+bool tree_save_subtree_size(tree_t *tree, const node_t *node, uint32_t size) {
     if (tree->num_hash_entries > HASHTABLE_MASK / 8) {
         // do not fill table too much
         return false;
@@ -145,7 +145,7 @@ bool tree_open(tree_t *tree, const char *filename) {
     tree->root = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, tree->fd, 0);
     if (tree->root == MAP_FAILED) return false;
 
-    const size_t page_size = sysconf(_SC_PAGE_SIZE);
+    const size_t page_size = getpagesize();
     tree->num_pages = sb.st_size / page_size;
     if (sb.st_size % page_size > 0) tree->num_pages++;
 
@@ -181,12 +181,12 @@ bool tree_open(tree_t *tree, const char *filename) {
 void tree_close(tree_t *tree) {
     if (tree->hashtable) free(tree->hashtable);
     if (tree->arr) free(tree->arr);
-    munmap(tree->root, tree->num_pages * sysconf(_SC_PAGE_SIZE));
+    munmap(tree->root, tree->num_pages * getpagesize());
     close(tree->fd);
     memset(tree, 0, sizeof(tree_t));
 }
 
-static const node_t *tree_move(const tree_t *tree, move_t move, const node_t *node) {
+const node_t *tree_move(const tree_t *tree, move_t move, const node_t *node) {
     if (!node) return NULL;
     if (!node_has_child(node)) return NULL;
 
@@ -218,7 +218,7 @@ void tree_debug(const tree_t *tree, bool dump_hashtable) {
     }
 }
 
-static void tree_walk(tree_t *tree, const node_t *node, bool transpositions) {
+void tree_walk(tree_t *tree, const node_t *node, bool transpositions) {
     uint32_t index = tree_index(tree, node);
     uint16_t k = node->move >> 12;
     assert(node_trans_index(node) != 0x3fffffff);
@@ -247,7 +247,7 @@ static void tree_walk(tree_t *tree, const node_t *node, bool transpositions) {
     } while ((child = tree_next_sibling(tree, child)));
 }
 
-static uint32_t tree_subtree_size(tree_t *tree, const node_t *node) {
+uint32_t tree_subtree_size(tree_t *tree, const node_t *node) {
     if (tree->root == node) return tree->size;
 
     uint16_t k = node->move >> 12;
@@ -275,7 +275,7 @@ void query_result_clear(query_result_t *result) {
     memset(result, 0, sizeof(query_result_t));
 }
 
-static void query_result_add(query_result_t *result, move_t move, uint32_t size) {
+void query_result_add(query_result_t *result, move_t move, uint32_t size) {
     for (size_t i = 0; i < result->num_children; i++) {
         if (result->moves[i] == move) {
             result->sizes[i] += size;
@@ -291,17 +291,17 @@ static void query_result_add(query_result_t *result, move_t move, uint32_t size)
 }
 
 void query_result_sort(query_result_t *result) {
-    for (size_t i = 0; i < result->num_children; i++) {
+/*    for (size_t i = 0; i < result->num_children; i++) {
         for (size_t j = 0; j < result->num_children - i - 1; j++) {
             if (result->sizes[j] < result->sizes[j + 1]) {
                 SWAP(result->sizes[j], result->sizes[j + 1]);
                 SWAP(result->moves[j], result->moves[j + 1]);
             }
         }
-    }
+    }*/
 }
 
-static bool tree_query_children(tree_t *tree, const node_t *node, query_result_t *result) {
+bool tree_query_children(tree_t *tree, const node_t *node, query_result_t *result) {
     assert(node);
 
     if (!node_has_child(node)) return false;

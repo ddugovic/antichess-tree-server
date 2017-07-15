@@ -11,7 +11,7 @@ typedef struct node {
     uint16_t move;
 } __attribute__((packed)) node_t;
 
-_Static_assert(sizeof(node_t) == 6, "node_t packed");
+//_Static_assert(sizeof(node_t) == 6, "node_t packed");
 
 typedef struct hash_entry {
     uint32_t index;

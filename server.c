@@ -156,7 +156,7 @@ int serve(uint16_t port) {
     return event_base_dispatch(base);
 }
 
-int main(int argc, char *argv[]) {
+int main(int argc, char **argv) {
     fclose(stdin);
     setlinebuf(stdout);
 

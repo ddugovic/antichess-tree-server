@@ -7,12 +7,12 @@
 #include <assert.h>
 
 static inline int bb_popcount(uint64_t bb) {
-    return __builtin_popcountll(bb);
+    return 0;//__builtin_popcountll(bb);
 }
 
 static inline uint8_t bb_lsb(uint64_t bb) {
     assert(bb);
-    return __builtin_ctzll(bb);
+    return 0;//__builtin_ctzll(bb);
 }
 
 static inline uint8_t bb_poplsb(uint64_t *bb) {
